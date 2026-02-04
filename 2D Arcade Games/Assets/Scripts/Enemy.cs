@@ -1,18 +1,21 @@
 using UnityEngine;
 
+[RequireComponent(typeof(CircleCollider2D))]
+[RequireComponent(typeof(Rigidbody2D))]
 public class Enemy : MonoBehaviour
 {
     [Header("Chase")]
     [SerializeField] public float chaseSpeed = 3f;
 
-    [Header("References")]
-    [SerializeField] private Player player;
+    private Player player;
+    private Rigidbody2D rb;
 
     private void Awake()
     {
-        // Auto-find player if not assigned
-        if (player == null)
-            player = FindFirstObjectByType<Player>();
+        player = FindFirstObjectByType<Player>();
+        rb = GetComponent<Rigidbody2D>();
+        rb.gravityScale = 0;
+        rb.freezeRotation = true;
     }
 
     private void Update()
@@ -26,7 +29,16 @@ public class Enemy : MonoBehaviour
         if (!isLit)
         {
             Vector2 dir = ((Vector2)player.transform.position - (Vector2)transform.position).normalized;
-            transform.position += (Vector3)(dir * chaseSpeed * Time.deltaTime);
+            rb.linearVelocity = dir * chaseSpeed;
         }
+        else
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
+    }
+
+    public void Die()
+    {
+        Destroy(gameObject);
     }
 }

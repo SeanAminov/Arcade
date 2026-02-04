@@ -9,9 +9,20 @@ public class Player : MonoBehaviour
     [SerializeField] public float flashlightRange = 8f;
     [SerializeField] public float flashlightAngle = 45f;
 
+    [Header("Shooting")]
+    [SerializeField] public float bulletSpeed = 15f;
+    [SerializeField] public float missReloadTime = 3f;
+    [SerializeField] public GameObject bulletPrefab;
+
     private Camera mainCam;
+    private bool hasBullet = true;
+    private float reloadTimer = 0f;
+    private bool isReloading = false;
 
     public Vector2 FlashlightDirection { get; private set; }
+    public bool HasBullet => hasBullet;
+    public bool IsReloading => isReloading;
+    public float ReloadProgress => isReloading ? (1f - (reloadTimer / missReloadTime)) : 1f;
 
     private void Awake()
     {
@@ -24,11 +35,66 @@ public class Player : MonoBehaviour
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
         Vector2 move = new Vector2(h, v).normalized;
-        transform.position += (Vector3)(move * moveSpeed * Time.deltaTime);
+        Vector2 newPos = (Vector2)transform.position + move * moveSpeed * Time.deltaTime;
+
+        // Clamp to arena if it exists
+        if (Arena.Instance != null)
+            newPos = Arena.Instance.ClampToArena(newPos);
+
+        transform.position = newPos;
 
         // Flashlight aims at mouse
         Vector2 mouseWorld = mainCam.ScreenToWorldPoint(Input.mousePosition);
         FlashlightDirection = (mouseWorld - (Vector2)transform.position).normalized;
+
+        // Reload timer (only when reloading from a miss)
+        if (isReloading)
+        {
+            reloadTimer -= Time.deltaTime;
+            if (reloadTimer <= 0)
+            {
+                hasBullet = true;
+                isReloading = false;
+                reloadTimer = 0;
+            }
+        }
+
+        // Shooting
+        if (Input.GetMouseButtonDown(0) && hasBullet && bulletPrefab != null)
+        {
+            Shoot();
+        }
+    }
+
+    private void Shoot()
+    {
+        hasBullet = false;
+
+        GameObject bulletObj = Instantiate(bulletPrefab, transform.position, Quaternion.identity);
+        Bullet bullet = bulletObj.GetComponent<Bullet>();
+        if (bullet != null)
+        {
+            bullet.Init(this, FlashlightDirection, bulletSpeed);
+        }
+    }
+
+    /// <summary>
+    /// Called by bullet when it hits an enemy - instant reload.
+    /// </summary>
+    public void OnBulletHit()
+    {
+        hasBullet = true;
+        isReloading = false;
+        reloadTimer = 0;
+    }
+
+    /// <summary>
+    /// Called by bullet when it misses (hits wall) - slow reload.
+    /// </summary>
+    public void OnBulletMiss()
+    {
+        isReloading = true;
+        reloadTimer = missReloadTime;
     }
 
     /// <summary>
