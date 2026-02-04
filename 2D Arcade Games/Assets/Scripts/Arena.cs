@@ -29,15 +29,24 @@ public class Arena : MonoBehaviour
     private void OnValidate()
     {
         if (Application.isPlaying) return;
-        CreateWalls();
+        // Only update positions/sizes in editor, don't create/clean up objects
+        UpdateWallPositions();
     }
 
     private void CreateWalls()
     {
-        topWall = GetOrCreateWall("TopWall");
-        bottomWall = GetOrCreateWall("BottomWall");
-        leftWall = GetOrCreateWall("LeftWall");
-        rightWall = GetOrCreateWall("RightWall");
+        topWall = GetOrCreateWall("TopWall", true);
+        bottomWall = GetOrCreateWall("BottomWall", true);
+        leftWall = GetOrCreateWall("LeftWall", true);
+        rightWall = GetOrCreateWall("RightWall", true);
+
+        UpdateWallPositions();
+    }
+
+    private void UpdateWallPositions()
+    {
+        if (topWall == null || bottomWall == null || leftWall == null || rightWall == null)
+            return;
 
         float halfW = width / 2f;
         float halfH = height / 2f;
@@ -58,20 +67,19 @@ public class Arena : MonoBehaviour
         rightWall.size = sideSize;
     }
 
-    private BoxCollider2D GetOrCreateWall(string wallName)
+    private BoxCollider2D GetOrCreateWall(string wallName, bool cleanupSprites = false)
     {
         Transform existing = transform.Find(wallName);
         if (existing != null)
         {
-            // Remove any old sprite so no grey boxes
-            SpriteRenderer oldSr = existing.GetComponent<SpriteRenderer>();
-            if (oldSr != null)
+            // Remove any old sprite so no grey boxes (only when actually creating/cleaning up)
+            if (cleanupSprites)
             {
-#if UNITY_EDITOR
-                if (!Application.isPlaying) DestroyImmediate(oldSr);
-                else
-#endif
-                Destroy(oldSr);
+                SpriteRenderer oldSr = existing.GetComponent<SpriteRenderer>();
+                if (oldSr != null)
+                {
+                    Destroy(oldSr);
+                }
             }
             return existing.GetComponent<BoxCollider2D>();
         }

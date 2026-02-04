@@ -4,10 +4,16 @@ public class Player : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] public float moveSpeed = 5f;
+    [Tooltip("If true, player is clamped to the camera view (screen edges). If false, clamps to the Arena bounds.")]
+    [SerializeField] public bool clampToCameraView = true;
+    [Tooltip("How far inside the screen edge the player is allowed to move (world units). Increase if you don't want to touch the exact edge.")]
+    [SerializeField] public float cameraEdgeMargin = 0.5f;
 
     [Header("Flashlight")]
-    [SerializeField] public float flashlightRange = 8f;
+    [SerializeField] public float flashlightRange = 6f;
     [SerializeField] public float flashlightAngle = 45f;
+    [Tooltip("How long enemies stay frozen after being lit (seconds).")]
+    [SerializeField] public float flashlightFreezeTime = 0.35f;
 
     [Header("Shooting")]
     [SerializeField] public float bulletSpeed = 15f;
@@ -20,6 +26,7 @@ public class Player : MonoBehaviour
     private bool isReloading = false;
 
     public Vector2 FlashlightDirection { get; private set; }
+    public float FlashlightFreezeTime => flashlightFreezeTime;
     public bool HasBullet => hasBullet;
     public bool IsReloading => isReloading;
     public float ReloadProgress => isReloading ? (1f - (reloadTimer / missReloadTime)) : 1f;
@@ -37,8 +44,10 @@ public class Player : MonoBehaviour
         Vector2 move = new Vector2(h, v).normalized;
         Vector2 newPos = (Vector2)transform.position + move * moveSpeed * Time.deltaTime;
 
-        // Clamp to arena if it exists
-        if (Arena.Instance != null)
+        // Clamp to camera view (screen edges) OR arena
+        if (clampToCameraView)
+            newPos = ClampToCameraView(newPos, cameraEdgeMargin);
+        else if (Arena.Instance != null)
             newPos = Arena.Instance.ClampToArena(newPos);
 
         transform.position = newPos;
@@ -59,8 +68,9 @@ public class Player : MonoBehaviour
             }
         }
 
-        // Shooting
-        if (Input.GetMouseButtonDown(0) && hasBullet && bulletPrefab != null)
+        // Shooting (left click OR spacebar)
+        bool shootPressed = Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space);
+        if (shootPressed && hasBullet && bulletPrefab != null)
         {
             Shoot();
         }
@@ -131,5 +141,24 @@ public class Player : MonoBehaviour
     {
         float c = Mathf.Cos(rad), s = Mathf.Sin(rad);
         return new Vector2(v.x * c - v.y * s, v.x * s + v.y * c);
+    }
+
+    private Vector2 ClampToCameraView(Vector2 pos, float margin)
+    {
+        if (mainCam == null || !mainCam.orthographic) return pos;
+
+        Vector2 camPos = mainCam.transform.position;
+        float halfH = mainCam.orthographicSize;
+        float halfW = halfH * mainCam.aspect;
+
+        float minX = camPos.x - halfW + margin;
+        float maxX = camPos.x + halfW - margin;
+        float minY = camPos.y - halfH + margin;
+        float maxY = camPos.y + halfH - margin;
+
+        return new Vector2(
+            Mathf.Clamp(pos.x, minX, maxX),
+            Mathf.Clamp(pos.y, minY, maxY)
+        );
     }
 }

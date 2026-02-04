@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baa05e579b2453e4cb62897b45aa03f1, type: 3}
+  m_Name: DifficultySettings
+  m_EditorClassIdentifier: 
+  easy:
+    missReloadTime: 0.5
+    enemySpeedMultiplier: 1
+    minSpawnInterval: 2
+    maxSpawnInterval: 4
+    rampSpawnRateOverTime: 1
+    rampDuration: 120
+    minSpawnIntervalEnd: 0.2
+    maxSpawnIntervalEnd: 0.5
+  medium:
+    missReloadTime: 1
+    enemySpeedMultiplier: 1.5
+    minSpawnInterval: 1.5
+    maxSpawnInterval: 3
+    rampSpawnRateOverTime: 1
+    rampDuration: 100
+    minSpawnIntervalEnd: 0.2
+    maxSpawnIntervalEnd: 0.5
+  hard:
+    missReloadTime: 2
+    enemySpeedMultiplier: 2
+    minSpawnInterval: 1
+    maxSpawnInterval: 2
+    rampSpawnRateOverTime: 1
+    rampDuration: 80
+    minSpawnIntervalEnd: 0.2
+    maxSpawnIntervalEnd: 0.5
+  extreme:
+    missReloadTime: 3
+    enemySpeedMultiplier: 3
+    minSpawnInterval: 0.5
+    maxSpawnInterval: 1.5
+    rampSpawnRateOverTime: 1
+    rampDuration: 60
+    minSpawnIntervalEnd: 0.2
+    maxSpawnIntervalEnd: 0.5
